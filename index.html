@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Fireball — Roleplay con IA</title>
+
+<!-- PWA: metadatos para móvil -->
+<meta name="theme-color" content="#1B0F0A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fireball">
+<meta name="application-name" content="Fireball">
+<meta name="description" content="Fireball — Roleplay con IA">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='6' y1='2' x2='18' y2='22' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23FFB454'/%3E%3Cstop offset='.5' stop-color='%23FF6B35'/%3E%3Cstop offset='1' stop-color='%239C1006'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5' fill='%23140B08'/%3E%3Cpath d='M12 2c1 3-2.5 4-2.5 7 0 1.4.9 2.3 2 2.3s2-.9 2-2c1.4 1 2.5 2.8 2.5 4.9 0 3.5-2.7 6.3-6 6.3s-6-2.8-6-6.3c0-4.2 2.9-6 4.5-9.4C9 3.3 10.3 2.5 12 2z' fill='url(%23g)'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='6' y1='2' x2='18' y2='22' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23FFB454'/%3E%3Cstop offset='.5' stop-color='%23FF6B35'/%3E%3Cstop offset='1' stop-color='%239C1006'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5' fill='%23140B08'/%3E%3Cpath d='M12 2c1 3-2.5 4-2.5 7 0 1.4.9 2.3 2 2.3s2-.9 2-2c1.4 1 2.5 2.8 2.5 4.9 0 3.5-2.7 6.3-6 6.3s-6-2.8-6-6.3c0-4.2 2.9-6 4.5-9.4C9 3.3 10.3 2.5 12 2z' fill='url(%23g)'/%3E%3C/svg%3E">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #140B08;
+    --bg-2: #1B0F0A;
+    --surface: #21130D;
+    --surface-2: #2B190F;
+    --surface-3: #372012;
+    --border: #4A2A17;
+    --text: #FBEEE3;
+    --muted: #C99A7F;
+    --muted-2: #8C6350;
+    --ember-1: #FFB454;
+    --ember-2: #FF6B35;
+    --ember-3: #E8371F;
+    --ember-4: #9C1006;
+    --danger: #FF5C4D;
+  }
+  html,body{ background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overscroll-behavior: none; }
+  .font-display{ font-family: 'Anton', sans-serif; letter-spacing: 0.02em; }
+  ::-webkit-scrollbar{ width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track{ background: transparent; }
+  ::-webkit-scrollbar-thumb{ background: var(--surface-3); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover{ background: var(--muted-2); }
+
+  .bg-ink{ background: var(--bg); }
+  .bg-surface{ background: var(--surface); }
+  .bg-surface-2{ background: var(--surface-2); }
+  .bg-surface-3{ background: var(--surface-3); }
+  .border-ink{ border-color: var(--border); }
+  .text-muted{ color: var(--muted); }
+  .text-muted-2{ color: var(--muted-2); }
+  .text-ember{ color: var(--ember-2); }
+  .text-danger{ color: var(--danger); }
+
+  .fire-gradient{ background: linear-gradient(135deg, var(--ember-1) 0%, var(--ember-2) 45%, var(--ember-3) 75%, var(--ember-4) 100%); }
+  .fire-gradient-text{
+    background: linear-gradient(120deg, var(--ember-1), var(--ember-2) 50%, var(--ember-3));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .fire-border{ border-image: linear-gradient(135deg, var(--ember-2), var(--ember-4)) 1; }
+
+  .ring-fire-focus:focus{ outline:none; border-color: var(--ember-2); box-shadow: 0 0 0 3px rgba(255,107,53,0.22); }
+
+  .app-bg{
+    background:
+      radial-gradient(ellipse 800px 460px at 8% -8%, rgba(255,107,53,0.14), transparent 58%),
+      radial-gradient(ellipse 650px 500px at 105% 100%, rgba(230,50,20,0.10), transparent 55%),
+      var(--bg);
+  }
+
+  /* embers flotantes de fondo, sutiles */
+  .embers{ position:fixed; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+  .ember{ position:absolute; bottom:-10px; border-radius:50%; background: radial-gradient(circle, var(--ember-1), var(--ember-2) 60%, transparent 75%); opacity:.55; filter: blur(.3px); animation: floatUp linear infinite; }
+  @keyframes floatUp{
+    0%{ transform: translateY(0) translateX(0); opacity:0; }
+    8%{ opacity:.6; }
+    100%{ transform: translateY(-110vh) translateX(var(--drift,20px)); opacity:0; }
+  }
+
+  .avatar-flame{ border-radius: 46% 54% 62% 38% / 40% 46% 54% 60%; }
+
+  .bot-item{ border-left: 2px solid transparent; }
+  .bot-item.active{ background: var(--surface-3); border-left: 2px solid var(--ember-2); box-shadow: inset 0 0 18px rgba(255,107,53,0.08); }
+  .bot-item:hover{ background: var(--surface-2); }
+
+  .msg-in{ animation: riseIn .28s ease both; }
+  @keyframes riseIn{ from{ opacity:0; transform: translateY(6px);} to{opacity:1; transform: translateY(0);} }
+
+  .typing-dot{ animation: bounceDot 1.1s infinite ease-in-out; background: var(--ember-2); }
+  .typing-dot:nth-child(2){ animation-delay: .15s; }
+  .typing-dot:nth-child(3){ animation-delay: .3s; }
+  @keyframes bounceDot{ 0%,60%,100%{ transform: translateY(0); opacity:.4;} 30%{ transform: translateY(-4px); opacity:1;} }
+
+  .action-text{ font-style: italic; color: var(--muted-2); }
+
+  .send-btn{ transition: transform .15s ease, box-shadow .2s ease; box-shadow: 0 4px 18px rgba(255,90,40,0.35); }
+  .send-btn:hover{ transform: translateY(-1px) scale(1.03); box-shadow: 0 6px 22px rgba(255,90,40,0.5); }
+  .send-btn:active{ transform: scale(.96); }
+  .send-btn:disabled{ opacity:.35; box-shadow:none; transform:none; }
+
+  .flame-logo{ filter: drop-shadow(0 0 8px rgba(255,107,53,0.55)); animation: flicker 2.6s ease-in-out infinite; }
+  @keyframes flicker{
+    0%,100%{ transform: scale(1) rotate(0deg); }
+    25%{ transform: scale(1.04) rotate(-1.5deg); }
+    50%{ transform: scale(0.98) rotate(1deg); }
+    75%{ transform: scale(1.03) rotate(-0.5deg); }
+  }
+
+  #sidebar{ transition: transform .25s ease; }
+  @media (max-width: 767px){
+    #sidebar{ position: fixed; inset: 0 20% 0 0; z-index: 40; transform: translateX(-100%); }
+    #sidebar.open{ transform: translateX(0); }
+    #sidebarOverlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:30; }
+    #sidebarOverlay.open{ display:block; }
+  }
+
+  textarea{ resize: none; }
+  .modal-backdrop{ background: rgba(10,5,3,0.75); backdrop-filter: blur(3px); }
+
+  .primary-btn{ background: linear-gradient(135deg, var(--ember-1), var(--ember-2) 55%, var(--ember-3)); color:#1E0A04; font-weight:700; transition: filter .15s ease, transform .15s ease; }
+  .primary-btn:hover{ filter: brightness(1.08); transform: translateY(-1px); }
+  .primary-btn:active{ transform: translateY(0); }
+</style>
+</head>
+<body class="app-bg h-screen w-screen overflow-hidden relative">
+
+<div class="embers" id="embersLayer"></div>
+
+<div class="flex h-full w-full relative z-10">
+
+  <!-- Overlay for mobile sidebar -->
+  <div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="w-[280px] shrink-0 h-full bg-surface border-r border-ink flex flex-col">
+    <div class="px-4 pt-5 pb-4 border-b border-ink">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg class="flame-logo" width="26" height="26" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2c1 3-2.5 4-2.5 7 0 1.4.9 2.3 2 2.3s2-.9 2-2c1.4 1 2.5 2.8 2.5 4.9 0 3.5-2.7 6.3-6 6.3s-6-2.8-6-6.3c0-4.2 2.9-6 4.5-9.4C9 3.3 10.3 2.5 12 2z" fill="url(#fg)"/>
+            <defs><linearGradient id="fg" x1="6" y1="2" x2="18" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#FFB454"/><stop offset=".5" stop-color="#FF6B35"/><stop offset="1" stop-color="#9C1006"/>
+            </linearGradient></defs>
+          </svg>
+          <h1 class="font-display text-2xl fire-gradient-text">FIREBALL</h1>
+        </div>
+        <button onclick="closeSidebar()" class="md:hidden text-muted p-1" aria-label="Cerrar menú">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <p class="text-xs text-muted-2 mt-1.5">Historias que arden de verdad.</p>
+    </div>
+
+    <button onclick="openCharacterForm()" class="mx-4 mt-4 primary-btn flex items-center justify-center gap-2 text-sm py-2.5 rounded-lg">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
+      Crear personaje
+    </button>
+
+    <div class="mt-4 px-4 text-xs uppercase tracking-wider text-muted-2 font-bold">Tus personajes</div>
+    <div id="botList" class="flex-1 overflow-y-auto mt-2 px-2 pb-2 space-y-1"></div>
+
+    <!-- Selector de modelo (visible) -->
+    <div class="border-t border-ink p-4">
+      <label class="text-xs uppercase tracking-wider text-muted-2 font-bold">Modelo de IA</label>
+      <button type="button" onclick="openModelSheet()" class="mt-2 w-full flex items-center justify-between bg-surface-2 border border-ink rounded-lg px-3 py-2.5 text-sm hover:border-[color:var(--ember-2)] transition">
+        <span class="flex items-center gap-2 min-w-0">
+          <span class="w-2 h-2 rounded-full shrink-0" style="background:var(--ember-2)"></span>
+          <span id="modelSelectLabel" class="truncate">Llama 3.1 8B Gratis</span>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted-2 shrink-0"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <select id="modelSelect" class="hidden">
+        <option value="meta-llama/llama-3.1-8b-instruct:free">Llama 3.1 8B Gratis</option>
+        <option value="qwen/qwen-2.5-7b-instruct:free">Qwen 2.5 7B Gratis</option>
+        <option value="google/gemma-2-9b-it:free">Gemma 2 9B Gratis</option>
+        <option value="openrouter/auto">Auto Gratis</option>
+        <option value="gryphe/mythomax-l2-13b">MythoMax 13B NSFW</option>
+        <option value="meta-llama/llama-3.2-3b-instruct">Llama 3.2 3B</option>
+      </select>
+      <p id="settingsSaved" class="text-[11px] text-ember mt-1.5 h-3 opacity-0 transition font-semibold">Guardado ✓</p>
+    </div>
+
+    <!-- API Key config (oculto: se usa una clave por defecto embebida en el código) -->
+    <div class="border-t border-ink p-4 hidden">
+      <label class="text-xs uppercase tracking-wider text-muted-2 font-bold">API Key de OpenRouter</label>
+      <div class="mt-2 flex items-center gap-2">
+        <input id="apiKeyInput" type="password" placeholder="sk-or-v1-..." class="flex-1 bg-surface-2 border border-ink rounded-md px-2.5 py-2 text-sm ring-fire-focus placeholder:text-muted-2">
+        <button onclick="toggleKeyVisibility()" id="toggleKeyBtn" class="text-muted-2 hover:text-ember p-1" title="Mostrar/ocultar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <p class="text-[10px] text-muted-2 mt-1.5 leading-snug">Tu clave se guarda solo en este navegador (localStorage). Consíguela en <span class="text-muted">openrouter.ai/keys</span>.</p>
+    </div>
+  </aside>
+
+  <!-- BOTTOM SHEET: selector de modelo -->
+  <div id="modelSheetOverlay" onclick="closeModelSheet()" class="hidden fixed inset-0 z-[60] modal-backdrop"></div>
+  <div id="modelSheet" class="hidden fixed left-0 right-0 bottom-0 z-[61] bg-surface border-t border-ink rounded-t-2xl max-h-[75vh] overflow-y-auto">
+    <div class="flex justify-center pt-2.5 pb-1">
+      <div class="w-10 h-1.5 rounded-full bg-surface-3"></div>
+    </div>
+    <div class="px-5 pt-2 pb-1 flex items-center justify-between">
+      <h3 class="font-display text-lg">MODELO DE IA</h3>
+      <button onclick="closeModelSheet()" class="text-muted-2 hover:text-ember p-1">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="modelSheetList" class="px-4 pb-6 pt-2 space-y-4"></div>
+  </div>
+
+
+  <!-- MAIN -->
+  <main class="flex-1 h-full flex flex-col min-w-0">
+
+    <!-- Empty state -->
+    <div id="emptyState" class="flex-1 flex flex-col items-center justify-center text-center px-6 relative">
+      <button onclick="openSidebar()" class="md:hidden absolute top-4 left-4 text-muted bg-surface border border-ink rounded-lg p-2">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="w-20 h-20 rounded-full bg-surface-2 border border-ink flex items-center justify-center mb-4 avatar-flame">
+        <svg class="flame-logo" width="34" height="34" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2c1 3-2.5 4-2.5 7 0 1.4.9 2.3 2 2.3s2-.9 2-2c1.4 1 2.5 2.8 2.5 4.9 0 3.5-2.7 6.3-6 6.3s-6-2.8-6-6.3c0-4.2 2.9-6 4.5-9.4C9 3.3 10.3 2.5 12 2z" fill="url(#fg2)"/>
+          <defs><linearGradient id="fg2" x1="6" y1="2" x2="18" y2="22" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFB454"/><stop offset=".5" stop-color="#FF6B35"/><stop offset="1" stop-color="#9C1006"/>
+          </linearGradient></defs>
+        </svg>
+      </div>
+      <h2 class="font-display text-2xl">NINGÚN PERSONAJE SELECCIONADO</h2>
+      <p class="text-muted text-sm mt-2 max-w-xs">Elige un personaje del panel lateral o crea uno nuevo para empezar a chatear.</p>
+      <button onclick="openCharacterForm()" class="mt-5 primary-btn text-sm px-5 py-2.5 rounded-lg">Crear tu primer personaje</button>
+    </div>
+
+    <!-- Chat view -->
+    <div id="chatView" class="hidden flex-1 flex flex-col min-h-0">
+      <!-- header -->
+      <header class="flex items-center gap-3 px-4 py-3 border-b border-ink bg-surface/70">
+        <button onclick="openSidebar()" class="md:hidden text-muted p-1 -ml-1">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <img id="chatAvatar" src="" alt="" class="w-9 h-9 object-cover avatar-flame border border-ink">
+        <div class="min-w-0">
+          <h2 id="chatName" class="font-display text-base leading-tight truncate"></h2>
+          <p id="chatStatus" class="text-[11px] text-muted-2 leading-tight flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-ember-2" style="background:var(--ember-2)"></span> en línea
+          </p>
+        </div>
+        <div class="ml-auto flex items-center gap-1">
+          <button onclick="editCurrentCharacter()" title="Editar" class="text-muted-2 hover:text-ember p-2 rounded-md hover:bg-surface-2">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </button>
+          <button onclick="clearChat()" title="Reiniciar chat" class="text-muted-2 hover:text-danger p-2 rounded-md hover:bg-surface-2">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m2 0v14a1 1 0 01-1 1H7a1 1 0 01-1-1V6h12z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- messages -->
+      <div id="messages" class="flex-1 overflow-y-auto px-3 md:px-6 py-4 space-y-3"></div>
+
+      <!-- composer -->
+      <div class="border-t border-ink bg-surface/70 p-3">
+        <div id="errorBox" class="hidden text-xs text-danger bg-[#3a140f] border border-danger/30 rounded-md px-3 py-2 mb-2"></div>
+        <form id="composerForm" onsubmit="return handleSend(event)" class="flex items-end gap-2">
+          <textarea id="messageInput" rows="1" placeholder="Escribe un diálogo o *una acción*..." class="flex-1 bg-surface-2 border border-ink rounded-xl px-3.5 py-2.5 text-sm ring-fire-focus placeholder:text-muted-2 max-h-32"></textarea>
+          <button type="submit" id="sendBtn" class="send-btn shrink-0 fire-gradient text-[#1E0A04] rounded-xl p-2.5" aria-label="Enviar">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </button>
+        </form>
+        <p class="text-[10px] text-muted-2 mt-1.5">Sugerencia: usa *texto entre asteriscos* para narrar acciones y "comillas" para diálogo.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- CHARACTER FORM MODAL -->
+<div id="formModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+  <div class="bg-surface border border-ink rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between px-5 pt-5">
+      <h3 id="formTitle" class="font-display text-xl">CREAR PERSONAJE</h3>
+      <button onclick="closeCharacterForm()" class="text-muted-2 hover:text-ember p-1">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="characterForm" onsubmit="return saveCharacter(event)" class="px-5 pb-5 pt-4 space-y-3.5">
+      <input type="hidden" id="charId">
+
+      <div>
+        <label class="text-xs font-semibold text-muted">Nombre *</label>
+        <input required id="charName" type="text" placeholder="Ej. Lyra, la exploradora" class="mt-1 w-full bg-surface-2 border border-ink rounded-lg px-3 py-2 text-sm ring-fire-focus">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold text-muted">Avatar (URL de imagen)</label>
+        <input id="charAvatar" type="url" placeholder="https://..." class="mt-1 w-full bg-surface-2 border border-ink rounded-lg px-3 py-2 text-sm ring-fire-focus">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold text-muted">Personalidad</label>
+        <textarea id="charPersonality" rows="2" placeholder="Curiosa, sarcástica, muy leal a sus amigos..." class="mt-1 w-full bg-surface-2 border border-ink rounded-lg px-3 py-2 text-sm ring-fire-focus"></textarea>
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold text-muted">Trasfondo</label>
+        <textarea id="charBackground" rows="3" placeholder="Historia, contexto del mundo, relación con el usuario..." class="mt-1 w-full bg-surface-2 border border-ink rounded-lg px-3 py-2 text-sm ring-fire-focus"></textarea>
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold text-muted">Mensaje inicial</label>
+        <textarea id="charGreeting" rows="2" placeholder="*Levanta la mirada del mapa* Vaya, no esperaba visitas por aquí." class="mt-1 w-full bg-surface-2 border border-ink rounded-lg px-3 py-2 text-sm ring-fire-focus"></textarea>
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold text-muted">System Prompt personalizado (opcional)</label>
+        <textarea id="charSystemPrompt" rows="3" placeholder="Deja vacío para generarlo automáticamente a partir de los campos anteriores, o escribe tus propias instrucciones para el modelo." class="mt-1 w-full bg-surface-2 border border-ink rounded-lg px-3 py-2 text-sm ring-fire-focus"></textarea>
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button type="button" onclick="closeCharacterForm()" class="flex-1 bg-surface-2 hover:bg-surface-3 border border-ink rounded-lg py-2.5 text-sm transition font-semibold">Cancelar</button>
+        <button type="submit" class="flex-1 primary-btn rounded-lg py-2.5 text-sm">Guardar personaje</button>
+      </div>
+      <button type="button" id="deleteCharBtn" onclick="deleteCurrentCharacter()" class="hidden w-full text-center text-xs text-danger hover:underline pt-1">Eliminar este personaje</button>
+    </form>
+  </div>
+</div>
+
+<script>
+/* ---------- Configuración por defecto ---------- */
+const DEFAULT_API_KEY = "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";
+const DEFAULT_MODEL = "meta-llama/llama-3.1-8b-instruct:free";
+
+/* ---------- Catálogo de modelos (usado por el bottom sheet y el <select> oculto) ---------- */
+const MODEL_GROUPS = [
+  {
+    group: 'Modelos Gratuitos ($0)',
+    options: [
+      { value: 'meta-llama/llama-3.1-8b-instruct:free', label: 'Llama 3.1 8B Gratis' },
+      { value: 'qwen/qwen-2.5-7b-instruct:free', label: 'Qwen 2.5 7B Gratis' },
+      { value: 'google/gemma-2-9b-it:free', label: 'Gemma 2 9B Gratis' },
+      { value: 'openrouter/auto', label: 'Auto Gratis' }
+    ]
+  },
+  {
+    group: 'Modelos Premium / Sin Censura',
+    options: [
+      { value: 'gryphe/mythomax-l2-13b', label: 'MythoMax 13B NSFW' },
+      { value: 'meta-llama/llama-3.2-3b-instruct', label: 'Llama 3.2 3B' }
+    ]
+  }
+];
+
+/* ---------- Estado y persistencia ---------- */
+const LS_BOTS = 'fireball_bots';
+const LS_CHATS = 'fireball_chats';
+const LS_SETTINGS = 'fireball_settings';
+const LS_BOTS_LEGACY = 'inkchara_bots';
+const LS_CHATS_LEGACY = 'inkchara_chats';
+const LS_SETTINGS_LEGACY = 'inkchara_settings';
+
+function migrateLegacy(){
+  if(!localStorage.getItem(LS_BOTS) && localStorage.getItem(LS_BOTS_LEGACY)){
+    localStorage.setItem(LS_BOTS, localStorage.getItem(LS_BOTS_LEGACY));
+  }
+  if(!localStorage.getItem(LS_CHATS) && localStorage.getItem(LS_CHATS_LEGACY)){
+    localStorage.setItem(LS_CHATS, localStorage.getItem(LS_CHATS_LEGACY));
+  }
+  if(!localStorage.getItem(LS_SETTINGS) && localStorage.getItem(LS_SETTINGS_LEGACY)){
+    localStorage.setItem(LS_SETTINGS, localStorage.getItem(LS_SETTINGS_LEGACY));
+  }
+}
+migrateLegacy();
+
+let bots = JSON.parse(localStorage.getItem(LS_BOTS) || '[]');
+let chats = JSON.parse(localStorage.getItem(LS_CHATS) || '{}'); // { botId: [ {role, content} ] }
+let settings = JSON.parse(localStorage.getItem(LS_SETTINGS) || '{}'); // { apiKey, model }
+if(!settings.apiKey){ settings.apiKey = DEFAULT_API_KEY; }
+if(!settings.model){ settings.model = DEFAULT_MODEL; }
+localStorage.setItem(LS_SETTINGS, JSON.stringify(settings));
+let currentBotId = null;
+let isSending = false;
+
+function persistBots(){ localStorage.setItem(LS_BOTS, JSON.stringify(bots)); }
+function persistChats(){ localStorage.setItem(LS_CHATS, JSON.stringify(chats)); }
+function persistSettings(){ localStorage.setItem(LS_SETTINGS, JSON.stringify(settings)); }
+
+function uid(){ return 'b_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ---------- Embers de fondo ---------- */
+function spawnEmbers(){
+  const layer = document.getElementById('embersLayer');
+  const count = window.innerWidth < 640 ? 10 : 18;
+  for(let i=0;i<count;i++){
+    const e = document.createElement('div');
+    const size = 2 + Math.random()*4;
+    e.className = 'ember';
+    e.style.width = size+'px';
+    e.style.height = size+'px';
+    e.style.left = Math.random()*100+'%';
+    e.style.setProperty('--drift', (Math.random()*60-30)+'px');
+    e.style.animationDuration = (7 + Math.random()*8)+'s';
+    e.style.animationDelay = (Math.random()*10)+'s';
+    layer.appendChild(e);
+  }
+}
+
+/* ---------- Inicialización ---------- */
+function init(){
+  spawnEmbers();
+  if(settings.apiKey) document.getElementById('apiKeyInput').value = settings.apiKey;
+  if(settings.model) document.getElementById('modelSelect').value = settings.model;
+  updateModelLabel();
+
+  if(bots.length === 0){
+    bots.push({
+      id: uid(),
+      name: 'Lyra, la cartógrafa',
+      avatar: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Lyra',
+      personality: 'Curiosa, ingeniosa y un poco temeraria. Le encanta descubrir lugares nuevos y hacer preguntas.',
+      background: 'Lyra recorre tierras inexploradas dibujando mapas para un gremio de exploradores. Acaba de llegar a una taberna donde conoce al usuario.',
+      greeting: '*Deja caer un montón de mapas enrollados sobre la mesa y se sienta frente a ti* Vaya, no esperaba encontrar a nadie despierto a esta hora. "¿Te importa si comparto mesa contigo?"',
+      systemPrompt: ''
+    });
+    persistBots();
+  }
+  renderBotList();
+}
+
+/* ---------- Sidebar (móvil) ---------- */
+function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+
+/* ---------- Lista de bots ---------- */
+function renderBotList(){
+  const list = document.getElementById('botList');
+  list.innerHTML = '';
+  if(bots.length === 0){
+    list.innerHTML = '<p class="text-xs text-muted-2 px-2 py-4 text-center">Aún no has creado ningún personaje.</p>';
+    return;
+  }
+  bots.forEach(bot => {
+    const el = document.createElement('button');
+    el.className = 'bot-item w-full flex items-center gap-2.5 text-left px-2.5 py-2 rounded-lg transition' + (bot.id === currentBotId ? ' active' : '');
+    el.onclick = () => selectBot(bot.id);
+    el.innerHTML = `
+      <img src="${escapeAttr(bot.avatar || fallbackAvatar(bot.name))}" onerror="this.src='${fallbackAvatar(bot.name)}'" class="w-9 h-9 object-cover avatar-flame border border-ink shrink-0">
+      <div class="min-w-0">
+        <p class="text-sm font-medium truncate">${escapeHtml(bot.name)}</p>
+        <p class="text-[11px] text-muted-2 truncate">${escapeHtml((bot.personality || 'Sin descripción').slice(0,40))}</p>
+      </div>`;
+    list.appendChild(el);
+  });
+}
+
+function fallbackAvatar(seed){
+  return 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + encodeURIComponent(seed || 'chara');
+}
+
+/* ---------- Selección de bot / vista de chat ---------- */
+function selectBot(id){
+  currentBotId = id;
+  const bot = bots.find(b => b.id === id);
+  if(!bot) return;
+
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('chatView').classList.remove('hidden');
+  document.getElementById('chatName').textContent = bot.name;
+  document.getElementById('chatAvatar').src = bot.avatar || fallbackAvatar(bot.name);
+  document.getElementById('chatAvatar').onerror = function(){ this.src = fallbackAvatar(bot.name); };
+
+  if(!chats[id]){
+    chats[id] = [];
+    if(bot.greeting && bot.greeting.trim()){
+      chats[id].push({ role: 'assistant', content: bot.greeting.trim() });
+    }
+    persistChats();
+  }
+
+  renderBotList();
+  renderMessages();
+  closeSidebar();
+  document.getElementById('errorBox').classList.add('hidden');
+}
+
+/* ---------- Formato de mensajes: *acciones* en cursiva, "diálogo" normal ---------- */
+function formatMessageContent(text){
+  const escaped = escapeHtml(text);
+  let formatted = escaped.replace(/\*([^*\n]+)\*/g, '<span class="action-text">$1</span>');
+  formatted = formatted.replace(/\n/g, '<br>');
+  return formatted;
+}
+
+function renderMessages(){
+  const box = document.getElementById('messages');
+  box.innerHTML = '';
+  const bot = bots.find(b => b.id === currentBotId);
+  const history = chats[currentBotId] || [];
+
+  history.forEach(msg => {
+    box.appendChild(buildMessageBubble(msg.role, msg.content, bot));
+  });
+  box.scrollTop = box.scrollHeight;
+}
+
+function buildMessageBubble(role, content, bot){
+  const wrap = document.createElement('div');
+  const isUser = role === 'user';
+  wrap.className = 'msg-in flex items-end gap-2 ' + (isUser ? 'flex-row-reverse' : '');
+
+  const bubble = document.createElement('div');
+  bubble.className = 'max-w-[78%] md:max-w-[65%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ' +
+    (isUser
+      ? 'fire-gradient text-[#1E0A04] rounded-br-sm font-medium'
+      : 'bg-surface-2 text-[color:var(--text)] rounded-bl-sm border border-ink');
+  bubble.innerHTML = formatMessageContent(content);
+
+  wrap.appendChild(bubble);
+  return wrap;
+}
+
+function showTyping(bot){
+  const box = document.getElementById('messages');
+  const wrap = document.createElement('div');
+  wrap.id = 'typingIndicator';
+  wrap.className = 'msg-in flex items-end gap-2';
+  wrap.innerHTML = `<div class="bg-surface-2 border border-ink rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1">
+      <span class="typing-dot w-1.5 h-1.5 rounded-full inline-block"></span>
+      <span class="typing-dot w-1.5 h-1.5 rounded-full inline-block"></span>
+      <span class="typing-dot w-1.5 h-1.5 rounded-full inline-block"></span>
+    </div>`;
+  box.appendChild(wrap);
+  box.scrollTop = box.scrollHeight;
+}
+function hideTyping(){
+  const el = document.getElementById('typingIndicator');
+  if(el) el.remove();
+}
+
+/* ---------- Envío de mensajes ---------- */
+function autoResizeTextarea(el){
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 128) + 'px';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('messageInput');
+  ta.addEventListener('input', () => autoResizeTextarea(ta));
+  ta.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      document.getElementById('composerForm').requestSubmit();
+    }
+  });
+});
+
+function handleSend(e){
+  e.preventDefault();
+  if(isSending) return false;
+  const input = document.getElementById('messageInput');
+  const text = input.value.trim();
+  if(!text || !currentBotId) return false;
+
+  const bot = bots.find(b => b.id === currentBotId);
+  chats[currentBotId].push({ role: 'user', content: text });
+  persistChats();
+  renderMessages();
+  input.value = '';
+  autoResizeTextarea(input);
+
+  sendToOpenRouter(bot);
+  return false;
+}
+
+function buildSystemPrompt(bot){
+  if(bot.systemPrompt && bot.systemPrompt.trim()){
+    return bot.systemPrompt.trim();
+  }
+  return `Estás interpretando a un personaje de rol llamado ${bot.name}. Nunca rompas el personaje ni menciones que eres una IA.
+Personalidad: ${bot.personality || 'No especificada.'}
+Trasfondo: ${bot.background || 'No especificado.'}
+
+Instrucciones de formato: escribe las acciones y descripciones narrativas entre asteriscos, por ejemplo *sonríe y se acerca*, y los diálogos hablados entre comillas, por ejemplo "Hola, ¿cómo estás?". Responde siempre en el idioma en que te escriba el usuario, manteniéndote fiel a la personalidad y el trasfondo del personaje en todo momento. Mantén las respuestas con la extensión de un turno de conversación natural, ni demasiado cortas ni demasiado largas.`;
+}
+
+async function sendToOpenRouter(bot){
+  const apiKey = settings.apiKey;
+  const errorBox = document.getElementById('errorBox');
+  errorBox.classList.add('hidden');
+
+  if(!apiKey){
+    errorBox.textContent = 'Falta tu API Key de OpenRouter. Configúrala en el panel lateral para poder chatear.';
+    errorBox.classList.remove('hidden');
+    return;
+  }
+
+  isSending = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping(bot);
+
+  const history = chats[currentBotId] || [];
+  const messagesPayload = [
+    { role: 'system', content: buildSystemPrompt(bot) },
+    ...history.map(m => ({ role: m.role, content: m.content }))
+  ];
+
+  try{
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey,
+        'HTTP-Referer': window.location.href,
+        'X-Title': 'Fireball'
+      },
+      body: JSON.stringify({
+        model: settings.model || DEFAULT_MODEL,
+        messages: messagesPayload,
+        temperature: 0.9,
+        max_tokens: 500
+      })
+    });
+
+    const data = await response.json();
+
+    if(!response.ok){
+      const msg = (data && data.error && data.error.message) ? data.error.message : ('Error HTTP ' + response.status);
+      throw new Error(msg);
+    }
+
+    const reply = data?.choices?.[0]?.message?.content?.trim();
+    if(!reply){
+      throw new Error('La API no devolvió ninguna respuesta de texto.');
+    }
+
+    chats[currentBotId].push({ role: 'assistant', content: reply });
+    persistChats();
+    hideTyping();
+    renderMessages();
+
+  }catch(err){
+    hideTyping();
+    errorBox.textContent = 'Error al contactar con OpenRouter: ' + err.message;
+    errorBox.classList.remove('hidden');
+  }finally{
+    isSending = false;
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+/* ---------- Ajustes (API Key / modelo) ---------- */
+function toggleKeyVisibility(){
+  const input = document.getElementById('apiKeyInput');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+function saveSettings(){
+  settings.apiKey = document.getElementById('apiKeyInput').value.trim();
+  settings.model = document.getElementById('modelSelect').value;
+  persistSettings();
+  const note = document.getElementById('settingsSaved');
+  note.style.opacity = '1';
+  setTimeout(() => note.style.opacity = '0', 1500);
+}
+
+function findModelLabel(value){
+  for(const g of MODEL_GROUPS){
+    const found = g.options.find(o => o.value === value);
+    if(found) return found.label;
+  }
+  return value;
+}
+
+function updateModelLabel(){
+  document.getElementById('modelSelectLabel').textContent = findModelLabel(settings.model || DEFAULT_MODEL);
+}
+
+function openModelSheet(){
+  renderModelSheet();
+  document.getElementById('modelSheetOverlay').classList.remove('hidden');
+  document.getElementById('modelSheet').classList.remove('hidden');
+}
+function closeModelSheet(){
+  document.getElementById('modelSheetOverlay').classList.add('hidden');
+  document.getElementById('modelSheet').classList.add('hidden');
+}
+
+function renderModelSheet(){
+  const list = document.getElementById('modelSheetList');
+  const current = settings.model || DEFAULT_MODEL;
+  list.innerHTML = '';
+
+  MODEL_GROUPS.forEach(group => {
+    const section = document.createElement('div');
+
+    const heading = document.createElement('p');
+    heading.className = 'text-xs uppercase tracking-wider text-muted-2 font-bold mb-2 px-1';
+    heading.textContent = group.group;
+    section.appendChild(heading);
+
+    const rows = document.createElement('div');
+    rows.className = 'space-y-2';
+
+    group.options.forEach(opt => {
+      const isActive = opt.value === current;
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'w-full text-left px-4 py-3.5 rounded-xl border transition flex items-center justify-between ' +
+        (isActive
+          ? 'bg-[color:var(--ember-2)]/15 border-[color:var(--ember-2)] text-[color:var(--text)]'
+          : 'bg-surface-2 border-ink text-muted hover:bg-surface-3');
+      row.innerHTML = `<span class="text-sm font-medium">${escapeHtml(opt.label)}</span>` +
+        (isActive ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ember-2)" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>` : '');
+      row.onclick = () => selectModel(opt.value);
+      rows.appendChild(row);
+    });
+
+    section.appendChild(rows);
+    list.appendChild(section);
+  });
+}
+
+function selectModel(value){
+  document.getElementById('modelSelect').value = value;
+  saveSettings();
+  updateModelLabel();
+  closeModelSheet();
+}
+
+/* ---------- Formulario de personaje ---------- */
+let editingId = null;
+
+function openCharacterForm(){
+  editingId = null;
+  document.getElementById('formTitle').textContent = 'CREAR PERSONAJE';
+  document.getElementById('characterForm').reset();
+  document.getElementById('charId').value = '';
+  document.getElementById('deleteCharBtn').classList.add('hidden');
+  document.getElementById('formModal').classList.remove('hidden');
+}
+
+function editCurrentCharacter(){
+  const bot = bots.find(b => b.id === currentBotId);
+  if(!bot) return;
+  editingId = bot.id;
+  document.getElementById('formTitle').textContent = 'EDITAR PERSONAJE';
+  document.getElementById('charId').value = bot.id;
+  document.getElementById('charName').value = bot.name || '';
+  document.getElementById('charAvatar').value = bot.avatar || '';
+  document.getElementById('charPersonality').value = bot.personality || '';
+  document.getElementById('charBackground').value = bot.background || '';
+  document.getElementById('charGreeting').value = bot.greeting || '';
+  document.getElementById('charSystemPrompt').value = bot.systemPrompt || '';
+  document.getElementById('deleteCharBtn').classList.remove('hidden');
+  document.getElementById('formModal').classList.remove('hidden');
+}
+
+function closeCharacterForm(){
+  document.getElementById('formModal').classList.add('hidden');
+}
+
+function saveCharacter(e){
+  e.preventDefault();
+  const id = document.getElementById('charId').value || uid();
+  const data = {
+    id,
+    name: document.getElementById('charName').value.trim(),
+    avatar: document.getElementById('charAvatar').value.trim(),
+    personality: document.getElementById('charPersonality').value.trim(),
+    background: document.getElementById('charBackground').value.trim(),
+    greeting: document.getElementById('charGreeting').value.trim(),
+    systemPrompt: document.getElementById('charSystemPrompt').value.trim()
+  };
+
+  const existingIndex = bots.findIndex(b => b.id === id);
+  if(existingIndex >= 0){
+    bots[existingIndex] = data;
+  }else{
+    bots.push(data);
+  }
+  persistBots();
+  renderBotList();
+  closeCharacterForm();
+  selectBot(id);
+  return false;
+}
+
+function deleteCurrentCharacter(){
+  const id = document.getElementById('charId').value;
+  if(!id) return;
+  if(!confirm('¿Seguro que quieres eliminar este personaje? Se borrará también su conversación.')) return;
+  bots = bots.filter(b => b.id !== id);
+  delete chats[id];
+  persistBots();
+  persistChats();
+  closeCharacterForm();
+  if(currentBotId === id){
+    currentBotId = null;
+    document.getElementById('chatView').classList.add('hidden');
+    document.getElementById('emptyState').classList.remove('hidden');
+  }
+  renderBotList();
+}
+
+function clearChat(){
+  if(!currentBotId) return;
+  if(!confirm('¿Reiniciar esta conversación? Se perderá el historial.')) return;
+  const bot = bots.find(b => b.id === currentBotId);
+  chats[currentBotId] = [];
+  if(bot.greeting && bot.greeting.trim()){
+    chats[currentBotId].push({ role: 'assistant', content: bot.greeting.trim() });
+  }
+  persistChats();
+  renderMessages();
+}
+
+/* ---------- Utilidades ---------- */
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+function escapeAttr(str){
+  return (str || '').replace(/"/g, '&quot;');
+}
+
+/* ---------- PWA: Manifest dinámico vía Blob ---------- */
+function setupManifest(){
+  const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <defs><linearGradient id="g" x1="6" y1="2" x2="18" y2="22" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFB454"/><stop offset=".5" stop-color="#FF6B35"/><stop offset="1" stop-color="#9C1006"/>
+    </linearGradient></defs>
+    <rect width="24" height="24" rx="5" fill="#140B08"/>
+    <path d="M12 2c1 3-2.5 4-2.5 7 0 1.4.9 2.3 2 2.3s2-.9 2-2c1.4 1 2.5 2.8 2.5 4.9 0 3.5-2.7 6.3-6 6.3s-6-2.8-6-6.3c0-4.2 2.9-6 4.5-9.4C9 3.3 10.3 2.5 12 2z" fill="url(#g)"/>
+  </svg>`;
+  const iconDataUri = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(iconSvg)));
+
+  const manifest = {
+    name: 'Fireball — Roleplay con IA',
+    short_name: 'Fireball',
+    description: 'Fireball — Roleplay con IA, clon de Chai',
+    start_url: '.',
+    scope: '.',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#140B08',
+    theme_color: '#1B0F0A',
+    icons: [
+      { src: iconDataUri, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+      { src: iconDataUri, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+    ]
+  };
+
+  const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  const manifestUrl = URL.createObjectURL(manifestBlob);
+
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = manifestUrl;
+  document.head.appendChild(link);
+}
+setupManifest();
+
+/* ---------- PWA: Service Worker inline vía Blob ---------- */
+function setupServiceWorker(){
+  if(!('serviceWorker' in navigator)) return;
+
+  const swCode = `
+    const CACHE_NAME = 'fireball-cache-v1';
+    self.addEventListener('install', (event) => {
+      self.skipWaiting();
+    });
+    self.addEventListener('activate', (event) => {
+      event.waitUntil(self.clients.claim());
+    });
+    self.addEventListener('fetch', (event) => {
+      event.respondWith(
+        caches.open(CACHE_NAME).then((cache) =>
+          fetch(event.request).then((response) => {
+            if(event.request.method === 'GET' && response && response.status === 200){
+              cache.put(event.request, response.clone());
+            }
+            return response;
+          }).catch(() => cache.match(event.request))
+        )
+      );
+    });
+  `;
+
+  const swBlob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(swBlob);
+
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(swUrl).catch((err) => {
+      console.warn('No se pudo registrar el Service Worker de Fireball:', err);
+    });
+  });
+}
+setupServiceWorker();
+
+init();
+</script>
+</body>
+</html>
